@@ -1,1 +1,394 @@
+<!DOCTYPE html>
 
+<html lang="it">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta
+  name="viewport"
+  content="width=device-width, initial-scale=1"
+/>
+
+<title>DocChat</title>
+
+
+<style>
+
+* {
+  box-sizing: border-box;
+}
+
+
+body {
+
+  margin: 0;
+
+  font-family:
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+
+  background: #f5f7fb;
+
+  color: #172033;
+}
+
+
+.container {
+
+  width: min(900px, 100%);
+
+  min-height: 100vh;
+
+  margin: auto;
+
+  padding: 25px;
+
+  display: flex;
+
+  flex-direction: column;
+}
+
+
+.header {
+
+  padding: 15px 5px 20px;
+}
+
+
+.header h1 {
+
+  margin: 0;
+
+  font-size: 30px;
+}
+
+
+.header p {
+
+  margin-top: 7px;
+
+  color: #667085;
+}
+
+
+.chat {
+
+  flex: 1;
+
+  min-height: 550px;
+
+  background: white;
+
+  border: 1px solid #e4e7ec;
+
+  border-radius: 18px;
+
+  padding: 20px;
+
+  overflow-y: auto;
+}
+
+
+.message {
+
+  max-width: 80%;
+
+  padding: 13px 16px;
+
+  border-radius: 16px;
+
+  margin-bottom: 14px;
+
+  line-height: 1.5;
+
+  white-space: pre-wrap;
+}
+
+
+.user {
+
+  margin-left: auto;
+
+  background: #e8edff;
+}
+
+
+.bot {
+
+  background: #f2f4f7;
+}
+
+
+.form {
+
+  display: flex;
+
+  gap: 10px;
+
+  margin-top: 15px;
+}
+
+
+.input {
+
+  flex: 1;
+
+  padding: 15px;
+
+  border-radius: 12px;
+
+  border: 1px solid #d0d5dd;
+
+  font-size: 16px;
+}
+
+
+.button {
+
+  padding: 0 22px;
+
+  border: 0;
+
+  border-radius: 12px;
+
+  background: #111827;
+
+  color: white;
+
+  font-weight: 600;
+
+  cursor: pointer;
+}
+
+
+.button:disabled {
+
+  opacity: 0.5;
+}
+
+
+.footer {
+
+  text-align: center;
+
+  font-size: 12px;
+
+  color: #98a2b3;
+
+  margin-top: 10px;
+}
+
+
+</style>
+
+</head>
+
+
+<body>
+
+
+<div class="container">
+
+
+<header class="header">
+
+<h1>📚 DocChat</h1>
+
+<p>
+Chiedimi qualcosa sul contenuto del documento.
+</p>
+
+</header>
+
+
+<div
+  id="chat"
+  class="chat"
+>
+
+<div class="message bot">
+
+Ciao! 👋
+
+Sono l'assistente del documento.
+
+Puoi chiedermi, ad esempio:
+
+"Quali sono i requisiti?"
+
+oppure:
+
+"Quanto dura la procedura?"
+
+</div>
+
+</div>
+
+
+<form
+  id="form"
+  class="form"
+>
+
+<input
+  id="input"
+  class="input"
+  placeholder="Scrivi la tua domanda..."
+  autocomplete="off"
+  required
+/>
+
+<button
+  id="button"
+  class="button"
+>
+
+Invia
+
+</button>
+
+</form>
+
+
+<div class="footer">
+
+Le risposte sono basate sul documento configurato.
+
+</div>
+
+
+</div>
+
+
+<script>
+
+const form =
+  document.getElementById("form");
+
+const input =
+  document.getElementById("input");
+
+const button =
+  document.getElementById("button");
+
+const chat =
+  document.getElementById("chat");
+
+
+function addMessage(text, type) {
+
+  const element =
+    document.createElement("div");
+
+  element.className =
+    "message " + type;
+
+  element.textContent =
+    text;
+
+  chat.appendChild(element);
+
+  chat.scrollTop =
+    chat.scrollHeight;
+
+  return element;
+}
+
+
+form.addEventListener(
+  "submit",
+  async (event) => {
+
+    event.preventDefault();
+
+
+    const question =
+      input.value.trim();
+
+
+    if (!question) {
+      return;
+    }
+
+
+    addMessage(
+      question,
+      "user"
+    );
+
+
+    input.value = "";
+
+    button.disabled = true;
+
+
+    const answer =
+      addMessage(
+        "🔎 Sto cercando...",
+        "bot"
+      );
+
+
+    try {
+
+      const response =
+        await fetch(
+          "/api/chat",
+          {
+            method: "POST",
+
+            headers: {
+              "Content-Type":
+                "application/json"
+            },
+
+            body: JSON.stringify({
+              question
+            })
+          }
+        );
+
+
+      const data =
+        await response.json();
+
+
+      if (!response.ok) {
+        throw new Error(
+          data.error ||
+          "Errore."
+        );
+      }
+
+
+      answer.textContent =
+        data.answer;
+
+
+    } catch (error) {
+
+      answer.textContent =
+        "❌ " +
+        error.message;
+
+    }
+
+
+    button.disabled = false;
+
+    input.focus();
+
+  }
+);
+
+</script>
+
+
+</body>
+
+</html>
